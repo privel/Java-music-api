@@ -60,6 +60,27 @@ public class MusicController {
     }
 
     // Вспомогательный метод для обработки файлов
+//    private ResponseEntity<Resource> serveFile(String path) throws IOException {
+//        String decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
+//        Path filePath = musicDir.resolve(decodedPath).normalize();
+//
+//        if (!filePath.startsWith(musicDir) || !Files.exists(filePath) || !Files.isReadable(filePath)) {
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        Resource resource = new UrlResource(filePath.toUri());
+//
+//        // Кодирование имени файла в UTF-8
+//        String encodedFilename = URLEncoder.encode(filePath.getFileName().toString(), StandardCharsets.UTF_8)
+//                .replace("+", "%20"); // Фикс для пробелов
+//
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.parseMediaType("audio/mpeg"))
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + encodedFilename + "\"")
+//                .header(HttpHeaders.ACCEPT_RANGES, "bytes")
+//                .body(resource);
+//    }
+
     private ResponseEntity<Resource> serveFile(String path) throws IOException {
         String decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
         Path filePath = musicDir.resolve(decodedPath).normalize();
@@ -70,13 +91,13 @@ public class MusicController {
 
         Resource resource = new UrlResource(filePath.toUri());
 
-        // Кодирование имени файла в UTF-8
+        // Encode filename properly
         String encodedFilename = URLEncoder.encode(filePath.getFileName().toString(), StandardCharsets.UTF_8)
-                .replace("+", "%20"); // Фикс для пробелов
+                .replace("+", "%20");
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("audio/mpeg"))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + encodedFilename + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFilename)
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
                 .body(resource);
     }
