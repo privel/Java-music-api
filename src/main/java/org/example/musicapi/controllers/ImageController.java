@@ -10,11 +10,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/images")
@@ -22,7 +28,36 @@ public class ImageController {
 
     private final String BASE_PATH = "src/main/resources/static/cover";
 
-    // Метод для получения изображения по жанру и имени файла
+//    // Метод для получения изображения по жанру и имени файла
+//    @GetMapping("/{genre}/{filename:.+}")
+//    public ResponseEntity<Resource> getImage(@PathVariable String genre, @PathVariable String filename) {
+//        try {
+//            Path filePath = Paths.get(BASE_PATH, genre, filename).toAbsolutePath().normalize();
+//            Resource resource = new UrlResource(filePath.toUri());
+//
+//            if (!resource.exists() || !resource.isReadable()) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+//            }
+//
+//            // Определяем MIME-тип файла
+//            String contentType = Files.probeContentType(filePath);
+//            if (contentType == null) {
+//                contentType = "application/octet-stream"; // Фallback для неизвестных типов
+//            }
+//
+//            return ResponseEntity.ok()
+//                    .contentType(MediaType.parseMediaType(contentType))
+//                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+//                    .body(resource);
+//        } catch (MalformedURLException e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+//        } catch (IOException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//        }
+//    }
+
+
+
     @GetMapping("/{genre}/{filename:.+}")
     public ResponseEntity<Resource> getImage(@PathVariable String genre, @PathVariable String filename) {
         try {
@@ -33,15 +68,19 @@ public class ImageController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
 
-            // Определяем MIME-тип файла
+            // Detect MIME type
             String contentType = Files.probeContentType(filePath);
             if (contentType == null) {
-                contentType = "application/octet-stream"; // Фallback для неизвестных типов
+                contentType = "application/octet-stream";
             }
+
+            // Encode filename to ensure special characters are properly handled
+            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8)
+                    .replace("+", "%20");
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encodedFilename)
                     .body(resource);
         } catch (MalformedURLException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
